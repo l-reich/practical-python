@@ -49,10 +49,10 @@ def parse_csv(
                 else:
                     record = tuple(row)
 
+            records.append(record)
+
         except ValueError:
             if not silence_errors:
                 print(f"Row {row_idx}: Couldn't convert {row}")
-
-        records.append(record)
 
     return records
