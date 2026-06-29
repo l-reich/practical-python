@@ -7,8 +7,8 @@ import report
 
 def portfolio_cost(filename):
     """Computes the total cost (shares*price) of a portfolio file"""
-    portfolio_list = report.read_portfolio(filename=filename)
-    return sum(d["shares"] * d["price"] for d in portfolio_list)
+    portfolio_obj = report.read_portfolio(filename=filename)
+    return sum(stock.cost for stock in portfolio_obj)
 
 
 def main(args):

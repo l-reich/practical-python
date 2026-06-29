@@ -3,18 +3,27 @@
 # Exercise 2.4
 
 import fileparse
+import stock
+import tableformat
+from portfolio import Portfolio
 
 
 def read_portfolio(filename):
-    with open(filename, 'rt') as f:
+    with open(filename, "rt") as f:
         portfolio_list = fileparse.parse_csv(
             f=f, types=[str, int, float], select=["name", "shares", "price"]
         )
-    return portfolio_list
+
+    stock_object_list = [
+        stock.Stock(dict["name"], dict["shares"], dict["price"])
+        for dict in portfolio_list
+    ]
+
+    return Portfolio(stock_object_list)
 
 
 def read_prices(filename):
-    with open(filename, 'rt') as f:
+    with open(filename, "rt") as f:
         price_list = fileparse.parse_csv(f=f, has_headers=False)
     price_dict = {}
 
@@ -24,58 +33,63 @@ def read_prices(filename):
     return price_dict
 
 
-def make_report(portfolio_file, prices_file):
-    portfolio_list = read_portfolio(filename=portfolio_file)
-    price_dict = read_prices(filename=prices_file)
-
+def make_report_data(portfolio, prices):
     result_list = []
-    for stock_entry in portfolio_list:
+    for stock_object in portfolio:
         stock_name, nshares, buy_price = (
-            stock_entry["name"],
-            stock_entry["shares"],
-            stock_entry["price"],
+            stock_object.name,
+            stock_object.shares,
+            stock_object.price,
         )
-        price_increase = round(-(buy_price - price_dict[stock_name]), 2)
+        price_increase = round(-(buy_price - prices[stock_name]), 2)
         result_list.append(
-            {
-                "name": stock_name,
-                "shares": nshares,
-                "price": round(price_dict[stock_name], 2),
-                "change": price_increase,
-            }
+            (
+                stock_name,
+                nshares,
+                round(prices[stock_name], 2),
+                price_increase,
+            )
         )
 
     return result_list
 
 
-def print_report(report_list):
-    print(f"{'Name':>10s} {'Shares':>10s} {'Price':>10s} {'Change':>10s}")
-    dash_bar_string = "-" * 10
-    print(dash_bar_string, dash_bar_string, dash_bar_string, dash_bar_string)
-    for stock_dict in report_list:
-        name, shares, price, change = (
-            stock_dict["name"],
-            stock_dict["shares"],
-            stock_dict["price"],
-            stock_dict["change"],
-        )
-        print(f"{name:>10s} {shares:>10d} {price:>10.2f} {change:>10.2f}")
+def print_report(reportdata, formatter: tableformat.TableFormatter):
+    """
+    Print a nicely formatted table from a list of (name, shares, price, change) tuples.
+    """
+    formatter.headings(["Name", "Shares", "Price", "Change"])
+    for name, shares, price, change in reportdata:
+        rowdata = [name, str(shares), f"{price:0.2f}", f"{change:0.2f}"]
+        formatter.row(rowdata)
 
 
-def portfolio_report(portfolio_filename, prices_filename):
-    print_report(
-        make_report(portfolio_file=portfolio_filename, prices_file=prices_filename)
-    )
+def portfolio_report(portfoliofile, pricefile, fmt="txt"):
+    """
+    Make a stock report given portfolio and price data files.
+    """
+    # Read data files
+    portfolio = read_portfolio(portfoliofile)
+    prices = read_prices(pricefile)
+
+    # Create the report data
+    report = make_report_data(portfolio, prices)
+
+    # Print it out
+    formatter = tableformat.create_formatter(fmt)
+    print_report(report, formatter)
 
 
 def main(args):
     if len(args) < 3:
         portfolio_report(
-            portfolio_filename="Data/portfoliodate.csv",
-            prices_filename="Data/prices.csv",
+            portfoliofile="Data/portfoliodate.csv",
+            pricefile="Data/prices.csv",
         )
+    elif len(args) == 4:
+        portfolio_report(portfoliofile=args[1], pricefile=args[2], fmt=args[3])
     else:
-        portfolio_report(portfolio_filename=args[1], prices_filename=args[2])
+        portfolio_report(portfoliofile=args[1], pricefile=args[2])
 
 
 if __name__ == "__main__":
