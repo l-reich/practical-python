@@ -8,16 +8,13 @@ import tableformat
 from portfolio import Portfolio
 
 
-def read_portfolio(filename):
+def read_portfolio(filename, **opts):
     with open(filename, "rt") as f:
         portfolio_list = fileparse.parse_csv(
-            f=f, types=[str, int, float], select=["name", "shares", "price"]
+            f=f, types=[str, int, float], select=["name", "shares", "price"], **opts
         )
 
-    stock_object_list = [
-        stock.Stock(dict["name"], dict["shares"], dict["price"])
-        for dict in portfolio_list
-    ]
+    stock_object_list = [stock.Stock(**stock_dict) for stock_dict in portfolio_list]
 
     return Portfolio(stock_object_list)
 
