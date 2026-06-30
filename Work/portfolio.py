@@ -1,6 +1,28 @@
+import stock
+import fileparse
+
+
 class Portfolio:
-    def __init__(self, holdings: list):
-        self._holdings = holdings
+    def __init__(self):
+        self._holdings = []
+
+    def append(self, holding):
+        if not isinstance(holding, stock.Stock):
+            raise TypeError()
+        self._holdings.append(holding)
+
+    @classmethod
+    def from_csv(cls, filename, **opts):
+        self = cls()
+        with open(filename, "rt") as f:
+            portfolio_list = fileparse.parse_csv(
+                f=f, types=[str, int, float], select=["name", "shares", "price"], **opts
+            )
+
+        for stock_dict in portfolio_list:
+            self.append(stock.Stock(**stock_dict))
+
+        return self
 
     def __iter__(self):
         return self._holdings.__iter__()
