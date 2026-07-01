@@ -2,7 +2,7 @@
 #
 # Exercise 1.27
 
-import report
+from . import report
 
 
 def portfolio_cost(filename):
